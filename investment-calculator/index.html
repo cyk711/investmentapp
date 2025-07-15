@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ETF投資報酬率預測分析</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        /* --- Professional & Modern Color Palette --- */
+        :root {
+            --primary-color: #4a69bd;      /* A more professional, muted blue */
+            --primary-dark: #2d3748;      /* Deep gray-blue for text */
+            --text-dark: #2d3748;         /* Primary text color */
+            --text-light: #718096;        /* Lighter gray for secondary text */
+            --bg-light: #f4f7f9;          /* A very light gray for the body background */
+            --bg-white: #ffffff;          /* Pure white for containers */
+            --border-color: #e2e8f0;      /* Subtle border color */
+            --danger-color: #e53e3e;       /* Clear red for warnings */
+            --warning-color: #dd6b20;      /* Amber for warnings */
+            --success-color: #38a169;      /* A modern, clean green */
+            --shadow-sm: rgba(0, 0, 0, 0.05); /* Lighter shadow */
+            --shadow-md: rgba(0, 0, 0, 0.1);  /* Standard shadow */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+            background: var(--bg-light);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--bg-white);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px var(--shadow-md);
+            padding: 30px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--primary-dark);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: var(--text-light);
+        }
+
+        .input-section {
+            background: var(--bg-light);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: none;
+            margin-bottom: 30px;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+        }
+
+        .input-group input {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background-color: var(--bg-white);
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(74, 105, 189, 0.2);
+        }
+
+        .calculate-btn {
+            background: var(--primary-color);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 20px auto;
+            box-shadow: 0 5px 15px rgba(74, 105, 189, 0.3);
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(74, 105, 189, 0.4);
+        }
+
+        .results-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .table-container, .chart-container, .summary-card, .warning-content {
+            background: var(--bg-white);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px var(--shadow-sm);
+        }
+        
+        .chart-container {
+             height: 500px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            table-layout: fixed;
+        }
+
+        th, td {
+            padding: 8px 6px;
+            text-align: right;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.85rem;
+            word-wrap: break-word;
+        }
+        
+        th:nth-child(1), td:nth-child(1),
+        th:nth-child(2), td:nth-child(2) {
+            width: 15%;
+        }
+
+        th {
+            background: var(--bg-light);
+            color: var(--text-dark);
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        tr {
+            line-height: 1.8;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+
+        .warning-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .warning-popup.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .warning-content {
+             padding: 30px;
+             text-align: center;
+             max-width: 400px;
+        }
+
+        .warning-content h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        .warning-content h3.danger { color: var(--danger-color); }
+        .warning-content h3.warning { color: var(--warning-color); }
+
+        .warning-content p {
+            color: var(--text-light);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .warning-btn {
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: opacity 0.2s;
+        }
+        
+        .warning-btn:hover {
+            opacity: 0.9;
+        }
+
+        .warning-btn.danger { background: var(--danger-color); }
+        .warning-btn.warning { background: var(--warning-color); }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+            text-align: center;
+        }
+
+        .status-accumulating {
+            background-color: rgba(74, 105, 189, 0.05);
+        }
+
+        .status-withdrawing {
+            background-color: rgba(56, 161, 105, 0.05);
+        }
+
+        tr:hover {
+            background-color: var(--bg-light);
+        }
+
+        .number { font-weight: bold; }
+        .positive { color: var(--success-color); }
+        .negative { color: var(--danger-color); }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            text-align: center;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .summary-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .summary-card .value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--text-dark);
+        }
+
+        @media (max-width: 900px) {
+            .results-section {
+                grid-template-columns: 1fr;
+            }
+            .chart-container {
+                margin-top: 30px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .container { padding: 20px; }
+            .input-grid { grid-template-columns: 1fr; }
+            .header h1 { font-size: 2rem; }
+            .table-container, .chart-container, .summary-card, .warning-content { padding: 15px; }
+            th, td {
+                padding: 6px 4px;
+                font-size: 0.75rem;
+            }
+            .chart-container { height: 400px; }
+            .chart-wrapper { height: 300px; }
+            .summary-cards { grid-template-columns: repeat(2, 1fr); }
+            .summary-card .value { font-size: 1.4rem; }
+        }
+
+        @media (max-width: 480px) {
+            th, td {
+                font-size: 0.7rem;
+            }
+            th:nth-child(5), td:nth-child(5) {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<script>
+  // 檢查瀏覽器是否支援 Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(registration => {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        })
+        .catch(error => {
+          console.log('ServiceWorker registration failed: ', error);
+        });
+    });
+  }
+</script>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>QQQ投資報酬率預測分析</h1>
+            <p>專業的長期投資規劃工具，助您實現財務自由</p>
+        </div>
+
+        <div class="input-section">
+            <div class="input-grid">
+                <div class="input-group">
+                    <label for="initialCapital">投入資本 (萬)</label>
+                    <input type="number" id="initialCapital" value="500" min="0" step="1">
+                </div>
+                <div class="input-group">
+                    <label for="annualReturn">年化報酬率 (%)</label>
+                    <input type="number" id="annualReturn" value="10" min="0" max="50" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label for="years">投資年期</label>
+                    <input type="number" id="years" value="30" min="1" max="60" step="1">
+                </div>
+                <div class="input-group">
+                    <label for="currentAge">目前年齡</label>
+                    <input type="number" id="currentAge" value="40" min="18" max="80" step="1">
+                </div>
+                <div class="input-group">
+                    <label for="withdrawalStartAge">開始提領的年齡</label>
+                    <input type="number" id="withdrawalStartAge" value="50" min="30" max="90" step="1">
+                </div>
+                <div class="input-group">
+                    <label for="withdrawalRate">每年提領率 (%)</label>
+                    <input type="number" id="withdrawalRate" value="4" min="0" max="20" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label for="monthlyContribution">每月再投入 (萬)</label>
+                    <input type="number" id="monthlyContribution" value="0" min="0" step="0.1">
+                </div>
+            </div>
+            <button class="calculate-btn" id="calculateBtn">📊 開始計算</button>
+        </div>
+
+        <div id="summaryCards" class="summary-cards" style="display: none;">
+        </div>
+
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <div class="table-container">
+                <h3 class="section-title">年度資產變化明細</h3>
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>年度</th>
+                            <th>年齡</th>
+                            <th>總資金(萬)</th>
+                            <th>資金變動(萬)</th>
+                            <th>累積提領(萬)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody">
+                    </tbody>
+                </table>
+            </div>
+            <div class="chart-container" id="chartSection">
+                <h3 class="section-title">資產成長趨勢圖</h3>
+                <div class="chart-wrapper">
+                    <canvas id="investmentChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="warning-popup" id="warningPopup">
+        <div class="warning-content">
+            <h3 id="warningTitle"></h3>
+            <p id="warningMessage"></p>
+            <div id="warningSuggestions"></div>
+            <button class="warning-btn" id="warningBtn">我明白了</button>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            let chartInstance;
+
+            const DOMElements = {
+                calculateBtn: document.getElementById('calculateBtn'),
+                resultsSection: document.getElementById('resultsSection'),
+                summaryCards: document.getElementById('summaryCards'),
+                resultsBody: document.getElementById('resultsBody'),
+                investmentChart: document.getElementById('investmentChart').getContext('2d'),
+                warningPopup: document.getElementById('warningPopup'),
+                warningTitle: document.getElementById('warningTitle'),
+                warningMessage: document.getElementById('warningMessage'),
+                warningSuggestions: document.getElementById('warningSuggestions'),
+                warningBtn: document.getElementById('warningBtn'),
+                inputs: {
+                    initialCapital: document.getElementById('initialCapital'),
+                    annualReturn: document.getElementById('annualReturn'),
+                    years: document.getElementById('years'),
+                    currentAge: document.getElementById('currentAge'),
+                    withdrawalStartAge: document.getElementById('withdrawalStartAge'),
+                    withdrawalRate: document.getElementById('withdrawalRate'),
+                    monthlyContribution: document.getElementById('monthlyContribution'),
+                }
+            };
+
+            function getInputs() {
+                return {
+                    initialCapital: parseFloat(DOMElements.inputs.initialCapital.value) || 0,
+                    annualReturn: parseFloat(DOMElements.inputs.annualReturn.value) / 100 || 0,
+                    years: parseInt(DOMElements.inputs.years.value) || 0,
+                    currentAge: parseInt(DOMElements.inputs.currentAge.value) || 0,
+                    withdrawalStartAge: parseInt(DOMElements.inputs.withdrawalStartAge.value) || 0,
+                    withdrawalRate: parseFloat(DOMElements.inputs.withdrawalRate.value) / 100 || 0,
+                    monthlyContribution: parseFloat(DOMElements.inputs.monthlyContribution.value) || 0,
+                };
+            }
+
+            function performCalculation(params) {
+                let totalAssets = params.initialCapital;
+                let totalWithdrawals = 0;
+                const results = [];
+                let fundsDepleted = false;
+                let belowInitialCapitalNotified = false;
+
+                for (let year = 1; year <= params.years; year++) {
+                    if (fundsDepleted) break;
+
+                    const age = params.currentAge + year - 1;
+                    const yearStartAssets = totalAssets;
+                    
+                    let withdrawalAmount = 0;
+                    let annualContribution = 0;
+                    const isWithdrawalPhase = age >= params.withdrawalStartAge;
+                    const status = isWithdrawalPhase ? '提領期' : '累積期';
+
+                    if (isWithdrawalPhase) {
+                        withdrawalAmount = yearStartAssets * params.withdrawalRate;
+                        if (withdrawalAmount > yearStartAssets) {
+                            withdrawalAmount = yearStartAssets;
+                        }
+                        totalAssets -= withdrawalAmount;
+                        totalWithdrawals += withdrawalAmount;
+                    } else {
+                        annualContribution = params.monthlyContribution * 12;
+                    }
+                    
+                    const growth = totalAssets * params.annualReturn;
+                    totalAssets += growth + annualContribution;
+                    
+                    results.push({
+                        year, age, yearStartAssets, annualContribution,
+                        withdrawalAmount, totalWithdrawals, yearEndAssets: totalAssets, status
+                    });
+
+                    if (isWithdrawalPhase && totalAssets < params.initialCapital && !belowInitialCapitalNotified) {
+                        belowInitialCapitalNotified = true;
+                    }
+
+                    if (totalAssets <= 0.01) {
+                        totalAssets = 0;
+                        fundsDepleted = true;
+                    }
+                }
+                return { results, fundsDepleted, belowInitialCapitalNotified };
+            }
+
+            const UIManager = {
+                renderTable(results) {
+                    DOMElements.resultsBody.innerHTML = '';
+                    const fragment = document.createDocumentFragment();
+                    results.forEach(result => {
+                        const row = document.createElement('tr');
+                        const statusClass = result.status === '提領期' ? 'status-withdrawing' : 'status-accumulating';
+                        const changeAmount = result.annualContribution - result.withdrawalAmount;
+                        const changeClass = changeAmount >= 0 ? 'positive' : 'negative';
+
+                        row.className = statusClass;
+                        row.innerHTML = `
+                            <td>${result.year}</td>
+                            <td>${result.age}</td>
+                            <td class="number">${result.yearEndAssets.toFixed(1)}</td>
+                            <td class="number ${changeClass}">${changeAmount.toFixed(1)}</td>
+                            <td class="number positive">${result.totalWithdrawals.toFixed(1)}</td>
+                        `;
+                        fragment.appendChild(row);
+                    });
+                    DOMElements.resultsBody.appendChild(fragment);
+                },
+                renderSummary(results, initialCapital) {
+                    let totalContributions = 0;
+                    results.forEach(r => { totalContributions += r.annualContribution; });
+
+                    const finalResult = results[results.length - 1] || {};
+                    const finalAssets = finalResult.yearEndAssets || 0;
+                    const totalWithdrawals = finalResult.totalWithdrawals || 0;
+                    const totalInvested = initialCapital + totalContributions;
+                    const totalReturn = finalAssets + totalWithdrawals - totalInvested;
+
+                    DOMElements.summaryCards.innerHTML = `
+                        <div class="summary-card">
+                            <h3>總投入資金</h3>
+                            <div class="value">${totalInvested.toFixed(1)}萬</div>
+                        </div>
+                        <div class="summary-card">
+                            <h3>累積提領</h3>
+                            <div class="value positive">${totalWithdrawals.toFixed(1)}萬</div>
+                        </div>
+                        <div class="summary-card">
+                            <h3>最終資產</h3>
+                            <div class="value">${finalAssets.toFixed(1)}萬</div>
+                        </div>
+                        <div class="summary-card">
+                            <h3>總報酬</h3>
+                            <div class="value positive">${totalReturn.toFixed(1)}萬</div>
+                        </div>
+                    `;
+                },
+                renderChart(results) {
+                    if (chartInstance) {
+                        chartInstance.destroy();
+                    }
+                    const years = results.map(r => r.year);
+                    const assets = results.map(r => r.yearEndAssets);
+                    const withdrawals = results.map(r => r.totalWithdrawals);
+
+                    chartInstance = new Chart(DOMElements.investmentChart, {
+                        type: 'line',
+                        data: {
+                            labels: years,
+                            datasets: [{
+                                label: '年底總資金',
+                                data: assets,
+                                borderColor: '#4a69bd', // var(--primary-color)
+                                backgroundColor: 'rgba(74, 105, 189, 0.1)',
+                                borderWidth: 3,
+                                fill: true,
+                                tension: 0.3,
+                                yAxisID: 'y'
+                            }, {
+                                label: '累積提領',
+                                data: withdrawals,
+                                borderColor: '#38a169', // var(--success-color)
+                                backgroundColor: 'rgba(56, 161, 105, 0.1)',
+                                borderWidth: 3,
+                                fill: false,
+                                tension: 0.3,
+                                yAxisID: 'y'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'top', labels: { usePointStyle: true, padding: 15, font: { size: 14 } } },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    callbacks: { label: context => `${context.dataset.label}: ${context.parsed.y.toFixed(1)}萬` }
+                                }
+                            },
+                            scales: {
+                                x: { title: { display: true, text: '投資年期 (年)', font: { size: 14, weight: 'bold' } } },
+                                y: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'left',
+                                    title: { display: true, text: '金額 (萬)', font: { size: 14, weight: 'bold' } },
+                                    ticks: { callback: value => `${value.toFixed(0)}萬` }
+                                }
+                            },
+                            interaction: { mode: 'nearest', axis: 'x', intersect: false }
+                        }
+                    });
+                },
+                showAlert(type, message, suggestionsHTML = '') {
+                    DOMElements.warningTitle.textContent = type === 'danger' ? '⚠️ 警告' : '🔔 提醒';
+                    DOMElements.warningTitle.className = type;
+                    DOMElements.warningMessage.textContent = message;
+                    DOMElements.warningSuggestions.innerHTML = suggestionsHTML;
+                    DOMElements.warningBtn.className = `warning-btn ${type}`;
+                    DOMElements.warningPopup.classList.add('show');
+                },
+                hideAlert() {
+                    DOMElements.warningPopup.classList.remove('show');
+                },
+                showResults() {
+                    DOMElements.resultsSection.style.display = 'grid';
+                    DOMElements.summaryCards.style.display = 'grid';
+                },
+                hideResults() {
+                    DOMElements.resultsSection.style.display = 'none';
+                    DOMElements.summaryCards.style.display = 'none';
+                }
+            };
+
+            function run() {
+                const inputs = getInputs();
+
+                if (inputs.withdrawalStartAge < inputs.currentAge) {
+                    UIManager.showAlert('danger', '開始提領年齡不能小於目前年齡！');
+                    return;
+                }
+                if (inputs.years <= 0 || inputs.initialCapital < 0) {
+                    UIManager.showAlert('danger', '請輸入有效的投資年期與資本！');
+                    return;
+                }
+
+                const { results, fundsDepleted, belowInitialCapitalNotified } = performCalculation(inputs);
+
+                if (results.length === 0) {
+                    UIManager.hideResults();
+                    return;
+                }
+
+                UIManager.renderTable(results);
+                UIManager.renderSummary(results, inputs.initialCapital);
+                UIManager.renderChart(results);
+                UIManager.showResults();
+
+                if (fundsDepleted) {
+                    const suggestions = `
+                        <p style="text-align: left; margin-top: 15px;">建議調整方案：</p>
+                        <ul style="text-align: left; padding-left: 20px;">
+                            <li>降低提領率</li>
+                            <li>增加每月投入</li>
+                            <li>延後開始提領年齡</li>
+                            <li>尋求更高的年化報酬率</li>
+                        </ul>
+                    `;
+                    UIManager.showAlert('danger', '計畫失敗，資金已耗盡！', suggestions);
+                } else if (belowInitialCapitalNotified) {
+                    UIManager.showAlert('warning', '您的資產已低於初始投入本金，請注意風險！');
+                }
+            }
+
+            function init() {
+                DOMElements.calculateBtn.addEventListener('click', run);
+                DOMElements.warningBtn.addEventListener('click', UIManager.hideAlert);
+                run();
+            }
+
+            document.addEventListener('DOMContentLoaded', init);
+        })();
+    </script>
+
+    <div style="text-align: left; padding: 20px 30px; max-width: 1400px; margin: 20px auto 0; background-color: #f4f7f9; border-radius: 12px; border: 1px solid #e2e8f0;">
+        <h4 style="font-size: 1rem; color: #2d3748; margin-bottom: 15px; text-align: center;">名詞計算方式說明</h4>
+        <p style="color: #718096; font-size: 0.8rem; line-height: 1.7;">
+            <strong>年化報酬率 (%)：</strong>
+            這是一個預估值，代表您期望投資組合「平均」每年的回報率。
+            <br>
+            <span style="color: #4a69bd;">範例：年初有 100 萬，報酬率 10%，年底資產會成長為 110 萬 (100萬 × 1.1)。</span>
+        </p>
+        <p style="margin-top: 12px; color: #718096; font-size: 0.8rem; line-height: 1.7;">
+            <strong>每月再投入 (萬)：</strong>
+            計算機會將此金額乘以 12 個月，作為「年度總投入」，並在每年年底計入總資產。
+            <br>
+            <span style="color: #4a69bd;">範例：每月投入 1 萬，年度總投入為 12 萬，會在年底加入本金參與複利。</span>
+        </p>
+        <p style="margin-top: 12px; color: #718096; font-size: 0.8rem; line-height: 1.7;">
+            <strong>每年提領率 (%)：</strong>
+            提領金額的計算基準是「每年度的年初」。
+            <br>
+            <span style="color: #4a69bd;">範例：年初有 1,000 萬，提領率 4%，當年可領取 40 萬 (1,000萬 × 4%)。</span>
+        </p>
+    </div>
+
+</body>
+</html>
