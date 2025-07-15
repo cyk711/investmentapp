@@ -1,21 +1,27 @@
 {
-  "name": "投資報酬率分析",
-  "short_name": "分析",
-  "start_url": ".",
+  "name": "QQQ投資報酬率預測分析",
+  "short_name": "QQQ投資分析",
+  "description": "專業的長期投資規劃工具，助您實現財務自由",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#f4f7f9",
   "theme_color": "#4a69bd",
-  "description": "專業的長期投資規劃與報酬率預測工具",
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "icon-192.png",
+      "sizes": "192x192",
       "type": "image/png",
-      "sizes": "192x192"
+      "purpose": "any maskable"
     },
     {
       "src": "icon-512.png",
+      "sizes": "512x512",
       "type": "image/png",
-      "sizes": "512x512"
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "categories": ["finance", "productivity", "business"],
+  "lang": "zh-TW",
+  "dir": "ltr"
 }
