@@ -326,20 +326,6 @@
         }
     </style>
 </head>
-<script>
-  // 檢查瀏覽器是否支援 Service Worker
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/service-worker.js')
-        .then(registration => {
-          console.log('ServiceWorker registration successful with scope: ', registration.scope);
-        })
-        .catch(error => {
-          console.log('ServiceWorker registration failed: ', error);
-        });
-    });
-  }
-</script>
 <body>
     <div class="container">
         <div class="header">
@@ -419,6 +405,29 @@
         </div>
     </div>
 
+    <div style="text-align: left; padding: 20px 30px; max-width: 1400px; margin: 20px auto 0; background-color: #f4f7f9; border-radius: 12px; border: 1px solid #e2e8f0;">
+        <h4 style="font-size: 1rem; color: #2d3748; margin-bottom: 15px; text-align: center;">名詞計算方式說明</h4>
+        <p style="color: #718096; font-size: 0.8rem; line-height: 1.7;">
+            <strong>年化報酬率 (%)：</strong>
+            這是一個預估值，代表您期望投資組合「平均」每年的回報率。
+            <br>
+            <span style="color: #4a69bd;">範例：年初有 100 萬，報酬率 10%，年底資產會成長為 110 萬 (100萬 × 1.1)。</span>
+        </p>
+        <p style="margin-top: 12px; color: #718096; font-size: 0.8rem; line-height: 1.7;">
+            <strong>每月再投入 (萬)：</strong>
+            計算機會將此金額乘以 12 個月，作為「年度總投入」，並在每年年底計入總資產。
+            <br>
+            <span style="color: #4a69bd;">範例：每月投入 1 萬，年度總投入為 12 萬，會在年底加入本金參與複利。</span>
+        </p>
+        <p style="margin-top: 12px; color: #718096; font-size: 0.8rem; line-height: 1.7;">
+            <strong>每年提領率 (%)：</strong>
+            提領金額的計算基準是「每年度的年初」。
+            <br>
+            <span style="color: #4a69bd;">範例：年初有 1,000 萬，提領率 4%，當年可領取 40 萬 (1,000萬 × 4%)。</span>
+        </p>
+    </div>
+    
+    <!-- 主要的計算邏輯腳本 -->
     <script>
         (function() {
             let chartInstance;
@@ -685,27 +694,30 @@
         })();
     </script>
 
-    <div style="text-align: left; padding: 20px 30px; max-width: 1400px; margin: 20px auto 0; background-color: #f4f7f9; border-radius: 12px; border: 1px solid #e2e8f0;">
-        <h4 style="font-size: 1rem; color: #2d3748; margin-bottom: 15px; text-align: center;">名詞計算方式說明</h4>
-        <p style="color: #718096; font-size: 0.8rem; line-height: 1.7;">
-            <strong>年化報酬率 (%)：</strong>
-            這是一個預估值，代表您期望投資組合「平均」每年的回報率。
-            <br>
-            <span style="color: #4a69bd;">範例：年初有 100 萬，報酬率 10%，年底資產會成長為 110 萬 (100萬 × 1.1)。</span>
-        </p>
-        <p style="margin-top: 12px; color: #718096; font-size: 0.8rem; line-height: 1.7;">
-            <strong>每月再投入 (萬)：</strong>
-            計算機會將此金額乘以 12 個月，作為「年度總投入」，並在每年年底計入總資產。
-            <br>
-            <span style="color: #4a69bd;">範例：每月投入 1 萬，年度總投入為 12 萬，會在年底加入本金參與複利。</span>
-        </p>
-        <p style="margin-top: 12px; color: #718096; font-size: 0.8rem; line-height: 1.7;">
-            <strong>每年提領率 (%)：</strong>
-            提領金額的計算基準是「每年度的年初」。
-            <br>
-            <span style="color: #4a69bd;">範例：年初有 1,000 萬，提領率 4%，當年可領取 40 萬 (1,000萬 × 4%)。</span>
-        </p>
-    </div>
-
+    <!-- PWA Service Worker 註冊腳本 (已移至正確位置) -->
+    <script>
+      // 檢查瀏覽器是否支援 Service Worker
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => {
+              console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            })
+            .catch(error => {
+              console.log('ServiceWorker registration failed: ', error);
+            });
+        });
+      }
+    </script>
 </body>
 </html>
+```
+
+### 接下來的步驟
+
+現在您有了這份最完美的 `index.html` 檔案，請接續我們之前的教學：
+
+1.  **確認檔案齊全**：確保您的專案資料夾內有 `index.html` (此版本)、`manifest.json`、`service-worker.js`、`icon-192.png`、`icon-512.png` 這 5 個檔案。
+2.  **上傳到 GitHub**：按照教學，將這 5 個檔案一起上傳到您建立好的 GitHub 存放庫。
+3.  **啟用 GitHub Pages**：到存放庫的 `Settings` -> `Pages` 啟用服務。
+4.  **等待發佈**：等待幾分鐘後，您的 PWA 網站就會正式上
