@@ -699,7 +699,8 @@
       // 檢查瀏覽器是否支援 Service Worker
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/service-worker.js')
+          // *** 修正開始：將絕對路徑改為相對路徑 ***
+          navigator.serviceWorker.register('service-worker.js')
             .then(registration => {
               console.log('ServiceWorker registration successful with scope: ', registration.scope);
             })
@@ -711,13 +712,3 @@
     </script>
 </body>
 </html>
-```
-
-### 接下來的步驟
-
-現在您有了這份最完美的 `index.html` 檔案，請接續我們之前的教學：
-
-1.  **確認檔案齊全**：確保您的專案資料夾內有 `index.html` (此版本)、`manifest.json`、`service-worker.js`、`icon-192.png`、`icon-512.png` 這 5 個檔案。
-2.  **上傳到 GitHub**：按照教學，將這 5 個檔案一起上傳到您建立好的 GitHub 存放庫。
-3.  **啟用 GitHub Pages**：到存放庫的 `Settings` -> `Pages` 啟用服務。
-4.  **等待發佈**：等待幾分鐘後，您的 PWA 網站就會正式上
